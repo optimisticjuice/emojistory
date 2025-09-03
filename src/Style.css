@@ -1,0 +1,11 @@
+html {
+    font-size: 62.5%;
+}
+.tinytext {
+    font-size: 1.1rem;
+}
+.rowlike{
+    display: flex;
+    flex-direction: row;
+    
+}

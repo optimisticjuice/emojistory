@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import './Style.css';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 const API_URL = 'https://api.api-ninjas.com/v1/emoji?name=';
@@ -6,9 +7,10 @@ const API_URL = 'https://api.api-ninjas.com/v1/emoji?name=';
 function App() {
   const [input, setInput] = useState('');
   const [emojiStory, setEmojiStory] = useState([]);
+  const [emojiNames, setEmojiNames] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-
+  const [isTinyTextDisplayed, setIsTinyTextDisplayed] = useState(false);
   // Memoized function to fetch emoji for a single word
   const fetchEmoji = useCallback(async (word) => {
     if (!word.trim()) return '❓';
@@ -26,7 +28,10 @@ function App() {
       }
 
       const data = await response.json();
-      return data[0]?.character || '❓';
+      return {
+        character: data[0]?.character || '❓',
+        name: data[0]?.name || 'unknown'
+      };
     } catch (err) {
       console.error('Error fetching emoji:', err);
       return '❓'; // Return question mark if emoji not found
@@ -47,8 +52,9 @@ function App() {
       if (lastWord && (emojiStory.length === 0 || words.length > emojiStory.length)) {
         setIsLoading(true);
         try {
-          const newEmoji = await fetchEmoji(lastWord);
-          setEmojiStory(prev => [...prev, newEmoji]);
+          const emojiData = await fetchEmoji(lastWord);
+          setEmojiStory(prev => [...prev, emojiData.character]);
+          setEmojiNames(prev => [...prev, emojiData.name]);
           setError('');
         } catch (err) {
           setError('Failed to fetch emoji');
@@ -65,6 +71,20 @@ function App() {
     setInput(e.target.value);
   };
 
+  const toggleTinyText = () => {
+    setIsTinyTextDisplayed(prev => !prev);
+  };
+
+  
+
+  useEffect(() => {
+    const tinytextElement = document.querySelectorAll('.tinytext');
+    if (tinytextElement) {
+      tinytextElement.forEach(element => {
+        element.style.display = isTinyTextDisplayed ? 'block' : 'none';
+      });
+    }
+  }, [isTinyTextDisplayed]);
   return (
     <div className="App" style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
       <h1>📖 Emoji Story</h1>
@@ -95,11 +115,22 @@ function App() {
         lineHeight: '1.5',
         whiteSpace: 'pre-wrap',
         backgroundColor: '#f9f9f9'
-      }}>
-        {emojiStory.join(' ')}
+      }}onDoubleClick={toggleTinyText}>
+        <div className='rowlike'>
+
+        {emojiStory.map((emoji, index) => (
+          <span key={index}>
+            <div className='tinytext'>
+              {emojiNames[index]} {`  `}
+            </div>
+            {emoji} {` `}
+          </span>
+        ))}  
+        </div>
+
       </div>
       
-      <div style={{ marginTop: '20px', color: '#666' }}>
+      <div style={{ marginTop: '20px', color: '#777' }}>
         <p>Tip: Type a word and press space to see it turn into an emoji!</p>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // import useEffect for reacting to input changes
 const API_KEY = import.meta.env.VITE_API_KEY;
 const API_URL = 'https://api.api-ninjas.com/v1/emoji?name=';
 function App() {
@@ -25,20 +25,32 @@ function App() {
         throw new Error(`API request failed with status ${response.status}`);
       }
 
-      const data = await response.json();       
+      const data = await response.json();
       if (data && data.length > 0) {
         setEmoji(data.map((item) => item.character));
         setError('');
       } else {
-        setEmoji('');
-        setError('No emoji found for that word.');
+        setEmoji(''); // clear previous result
+        setEmoji([word]); // show the word itself when no emoji is found
+        setError(''); // no error because we fall back to the word
       }
     } catch (err) {
       console.error('Error fetching emoji:', err);
       setEmoji('');
+      setEmoji([word]); // also show the word if the API fails
       setError(`Error: ${err.message || 'Failed to fetch emoji'}`);
     }
   };
+
+  // Fetch a new emoji every time the word changes
+  useEffect(() => {
+    if (word.trim()) {
+      fetchEmoji();
+    } else {
+      setEmoji('');
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [word]);
 
   return (
     <>
@@ -60,6 +72,7 @@ function App() {
       <div className="result">
         {emoji[0]}
           <hr/>
+          <q>{word}</q> {/* display the typed word as a quote */}
           {/* Rember you can map or Object.entries within an array or object in react.js within useState whilst useState is immutable  */}
         {error && <p>{error}</p>}
       </div>
